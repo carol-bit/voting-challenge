@@ -1,10 +1,11 @@
 package com.dbserver.votingchallenge.dto;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 public record SessionDTO(
         Long sessionId,
         Long topicId,
-        Instant opensAt,
-        Instant closesAt
+        LocalDateTime opensAt,
+        LocalDateTime closesAt
 ) {}

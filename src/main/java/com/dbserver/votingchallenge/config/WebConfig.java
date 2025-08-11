@@ -11,6 +11,6 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
                 .allowedHeaders("*")
-                .allowedOrigins("*"); // Externalize in application.yml for production
+                .allowedOrigins("*");
     }
 }

@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -19,6 +19,6 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
               AND s.closesAt >= :now
             """)
     Optional<Session> findActiveByTopicId(@Param("topicId") Long topicId,
-                                          @Param("now") Instant now);
+                                          @Param("now") LocalDateTime now);
 
 }

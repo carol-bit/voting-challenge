@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -24,33 +24,47 @@ public class TopicServiceImpl implements TopicService {
     @Override
     @Transactional
     public TopicDTO createTopic(CreateTopicRequest request) {
-        Topic entity = new Topic();
-        entity.setTitle(request.title());
-        entity.setDescription(request.description());
-        entity.setStatus(TopicStatus.DRAFT);
-        entity.setCreatedAt(Instant.now());
-        entity.setUpdatedAt(Instant.now());
+        Topic topicEntity = new Topic();
+        topicEntity.setTitle(request.title());
+        topicEntity.setDescription(request.description());
+        topicEntity.setStatus(TopicStatus.DRAFT);
+        topicEntity.setCreatedAt(LocalDateTime.now());
+        topicEntity.setUpdatedAt(LocalDateTime.now());
 
-        entity = topicRepository.save(entity);
-        return toDto(entity);
+        topicEntity = topicRepository.save(topicEntity);
+        return toDto(topicEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
     public TopicDTO getTopic(Long topicId) {
-        Topic topic = topicRepository.findById(topicId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Topic not found"));
-        return toDto(topic);
+        return toDto(findTopicEntityById(topicId));
     }
 
-    private static TopicDTO toDto(Topic t) {
+    @Override
+    @Transactional(readOnly = true)
+    public Topic findTopicEntityById(Long topicId) {
+        return topicRepository.findById(topicId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Topic not found"));
+    }
+
+    @Override
+    @Transactional
+    public void updateTopicStatus(Long topicId, TopicStatus status) {
+        Topic topic = findTopicEntityById(topicId);
+        topic.setStatus(status);
+        topic.setUpdatedAt(LocalDateTime.now());
+        topicRepository.save(topic);
+    }
+
+    private static TopicDTO toDto(Topic topic) {
         return new TopicDTO(
-                t.getTopicId(),
-                t.getTitle(),
-                t.getDescription(),
-                t.getStatus(),
-                t.getCreatedAt(),
-                t.getUpdatedAt()
+                topic.getTopicId(),
+                topic.getTitle(),
+                topic.getDescription(),
+                topic.getStatus(),
+                topic.getCreatedAt(),
+                topic.getUpdatedAt()
         );
     }
 }

@@ -2,10 +2,19 @@ package com.dbserver.votingchallenge.model;
 
 import com.dbserver.votingchallenge.enums.TopicStatus;
 import jakarta.persistence.*;
-import java.time.Instant;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "topic")
+@Getter
+@Setter
+@NoArgsConstructor
+@ToString
 public class Topic {
 
     @Id
@@ -25,31 +34,20 @@ public class Topic {
     private TopicStatus status = TopicStatus.CLOSED;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt = Instant.now();
+    private LocalDateTime updatedAt;
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = Instant.now();
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
-    public Long getTopicId() { return topicId; }
-    public void setTopicId(Long topicId) { this.topicId = topicId; }
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public TopicStatus getStatus() { return status; }
-    public void setStatus(TopicStatus status) { this.status = status; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-
-    public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

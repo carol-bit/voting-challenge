@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPattern": "/cpf/validate/.*"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "status": "ABLE_TO_VOTE"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"]
+  }
+}

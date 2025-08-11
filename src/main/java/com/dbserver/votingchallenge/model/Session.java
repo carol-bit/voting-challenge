@@ -1,10 +1,18 @@
 package com.dbserver.votingchallenge.model;
 
 import jakarta.persistence.*;
-import java.time.Instant;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "session")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Session {
 
     @Id
@@ -19,20 +27,15 @@ public class Session {
     private Topic topic;
 
     @Column(name = "opens_at", nullable = false)
-    private Instant opensAt;
+    private LocalDateTime opensAt;
 
     @Column(name = "closes_at", nullable = false)
-    private Instant closesAt;
+    private LocalDateTime closesAt;
 
-    public Long getSessionId() { return sessionId; }
-    public void setSessionId(Long sessionId) { this.sessionId = sessionId; }
-
-    public Topic getTopic() { return topic; }
-    public void setTopic(Topic topic) { this.topic = topic; }
-
-    public Instant getOpensAt() { return opensAt; }
-    public void setOpensAt(Instant opensAt) { this.opensAt = opensAt; }
-
-    public Instant getClosesAt() { return closesAt; }
-    public void setClosesAt(Instant closesAt) { this.closesAt = closesAt; }
+    @PrePersist
+    public void prePersist() {
+        if (opensAt == null) {
+            opensAt = LocalDateTime.now();
+        }
+    }
 }

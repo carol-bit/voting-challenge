@@ -1,13 +1,19 @@
 package com.dbserver.votingchallenge.model;
 
 import jakarta.persistence.*;
-import java.time.Instant;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "associate",
-       uniqueConstraints = {
-           @UniqueConstraint(name = "uk_associate_external_id", columnNames = "external_id")
-       })
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_associate_external_id", columnNames = "external_id")
+        })
+@Getter
+@Setter
+@NoArgsConstructor
 public class Associate {
 
     @Id
@@ -20,14 +26,10 @@ public class Associate {
     private String externalId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private LocalDateTime createdAt;
 
-    public Long getAssociateId() { return associateId; }
-    public void setAssociateId(Long associateId) { this.associateId = associateId; }
-
-    public String getExternalId() { return externalId; }
-    public void setExternalId(String externalId) { this.externalId = externalId; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

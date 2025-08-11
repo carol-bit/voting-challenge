@@ -32,6 +32,15 @@ services:
       timeout: 5s
       retries: 5
 
+  wiremock:
+    image: wiremock/wiremock
+    container_name: voting-wiremock
+    ports:
+      - "8089:8080"
+    volumes:
+      - ./wiremock/mappings:/home/wiremock/mappings
+      - ./wiremock/__files:/home/wiremock/__files
+
   app:
     build: .
     container_name: voting-api
@@ -43,12 +52,15 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       APP_REDIS_ENABLED: "false"
+      CPF_VALIDATION_URL: http://wiremock:8080
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      wiremock:
         condition: service_healthy
 
 volumes:

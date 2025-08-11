@@ -1,11 +1,14 @@
 package com.dbserver.votingchallenge.dto;
 
+import com.dbserver.votingchallenge.enums.VoteChoice;
+
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 public record VoteDTO(
-        Long id,
+        Long voteId,
         Long topicId,
         String associateId,
-        com.dbserver.votingchallenge.enums.VoteChoice choice,
-        Instant createdAt
+        VoteChoice choice,
+        LocalDateTime createdAt
 ) {}

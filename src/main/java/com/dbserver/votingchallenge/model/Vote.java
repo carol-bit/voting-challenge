@@ -2,13 +2,22 @@ package com.dbserver.votingchallenge.model;
 
 import com.dbserver.votingchallenge.enums.VoteChoice;
 import jakarta.persistence.*;
-import java.time.Instant;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "vote",
         uniqueConstraints = {
                 @UniqueConstraint(name = "ux_vote_topic_associate", columnNames = {"topic_id", "associate_id"})
         })
+@Getter
+@Setter
+@NoArgsConstructor
+@ToString
 public class Vote {
 
     @Id
@@ -32,20 +41,10 @@ public class Vote {
     private VoteChoice choice;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private LocalDateTime createdAt;
 
-    public Long getVoteId() { return voteId; }
-    public void setVoteId(Long voteId) { this.voteId = voteId; }
-
-    public Topic getTopic() { return topic; }
-    public void setTopic(Topic topic) { this.topic = topic; }
-
-    public Associate getAssociate() { return associate; }
-    public void setAssociate(Associate associate) { this.associate = associate; }
-
-    public VoteChoice getChoice() { return choice; }
-    public void setChoice(VoteChoice choice) { this.choice = choice; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }
