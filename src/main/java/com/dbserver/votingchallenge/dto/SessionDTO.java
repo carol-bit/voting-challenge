@@ -1,6 +1,5 @@
 package com.dbserver.votingchallenge.dto;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record SessionDTO(

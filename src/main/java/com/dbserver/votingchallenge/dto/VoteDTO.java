@@ -2,7 +2,6 @@ package com.dbserver.votingchallenge.dto;
 
 import com.dbserver.votingchallenge.enums.VoteChoice;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record VoteDTO(

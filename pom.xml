@@ -14,7 +14,7 @@
 
 	<groupId>com.dbserver.votingchallenge</groupId>
 	<artifactId>voting-challenge</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>Voting Challenge Api</name>
 	<description>Adicionar descrição</description>
 
@@ -22,7 +22,7 @@
 		<springdoc.version>2.8.6</springdoc.version>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
 		<java.version>17</java.version>
-		<lombok.version>1.18.28</lombok.version> <!-- Declare aqui a versão do lombok -->
+		<lombok.version>1.18.28</lombok.version>
 	</properties>
 
 	<dependencyManagement>
