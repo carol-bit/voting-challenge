@@ -10,10 +10,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
+
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -35,8 +36,10 @@ server:
 logging:
   level:
     root: INFO
-    org.springframework.web: DEBUG
-    com.example.voting: DEBUG
+    org.springframework: INFO
+    com.dbserver.votingchallenge: INFO
+    org.hibernate.SQL: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
 
 management:
   endpoints:
@@ -52,22 +55,6 @@ app:
   redis:
     enabled: true
 
-#springdoc:
-#  api-docs:
-#    path: /v3/api-docs
-#  swagger-ui:
-#    path: /swagger-ui.html
-#  group-configs:
-#    - group: v1
-#      paths-to-match:
-#        - /api/v1/**
-#  default-produces-media-type: application/json
-#  default-consumes-media-type: application/json
-#
-#  info:
-#    topicName: Voting API
-#    version: v1
-#    description: topics, sessions and votes
 
 
 springdoc:

@@ -1,6 +1,5 @@
 package com.dbserver.votingchallenge.service.impl;
 
-import com.dbserver.votingchallenge.client.CpfClient;
 import com.dbserver.votingchallenge.dto.ResultDTO;
 import com.dbserver.votingchallenge.dto.VoteDTO;
 import com.dbserver.votingchallenge.dto.VoteRequest;
@@ -15,17 +14,21 @@ import com.dbserver.votingchallenge.repository.VoteRepository;
 import com.dbserver.votingchallenge.service.CpfValidationService;
 import com.dbserver.votingchallenge.service.VoteService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VoteServiceImpl implements VoteService {
@@ -36,9 +39,18 @@ public class VoteServiceImpl implements VoteService {
     private final AssociateRepository associateRepository;
 
     private final CpfValidationService cpfValidationService;
+
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final String RESULT_CACHE_PREFIX = "result:";
+    private static final String VOTES_SET_PREFIX = "votes:";
+    private static final long RESULT_CACHE_TTL = 60; // seconds
+    private static final long VOTES_SET_TTL = 24 * 60 * 60; // 24 hours
+
     @Override
     @Transactional
     public VoteDTO registerVote(Long topicId, VoteRequest request) {
+        log.info("Registering vote for topicId={} associateExternalId={}", topicId, request.associateExternalId());
 
         if (!cpfValidationService.canVote(request.associateExternalId())) {
             throw new ResponseStatusException(NOT_FOUND, "CPF is not allowed to vote or invalid");
@@ -46,11 +58,16 @@ public class VoteServiceImpl implements VoteService {
 
         Topic topic = findTopicById(topicId);
         validateActiveSession(topicId);
+
         Associate associate = findOrCreateAssociate(request.associateExternalId());
-        validateDuplicateVote(topicId, associate.getAssociateId());
+
+        validateDuplicateVoteWithCache(topicId, associate.getAssociateId());
 
         Vote vote = createVote(topic, associate, request.choice());
         Vote savedVote = saveVote(vote);
+
+        addAssociateIdToVotesSet(topicId, associate.getAssociateId());
+        invalidateResultCache(topicId);
 
         return buildVoteDTO(savedVote);
     }
@@ -58,11 +75,25 @@ public class VoteServiceImpl implements VoteService {
     @Override
     @Transactional(readOnly = true)
     public ResultDTO getResult(Long topicId) {
-        long yes = countVotesByChoice(topicId, VoteChoice.SIM);
-        long no = countVotesByChoice(topicId, VoteChoice.NAO);
+        String cacheKey = RESULT_CACHE_PREFIX + topicId;
+        Object cached = redisTemplate.opsForValue().get(cacheKey);
+
+        if (cached instanceof ResultDTO) {
+            log.info("Returning cached result for topicId={}", topicId);
+            return (ResultDTO) cached;
+        }
+
+        log.info("Cache miss for result of topicId={}, calculating...", topicId);
+        long yesVotes = countVotesByChoice(topicId, VoteChoice.SIM);
+        long noVotes = countVotesByChoice(topicId, VoteChoice.NAO);
         Topic topic = findTopicById(topicId);
 
-        return calculateResult(topicId, yes, no, topic.getTitle());
+        ResultDTO result = calculateResult(topicId, yesVotes, noVotes, topic.getTitle());
+
+        redisTemplate.opsForValue().set(cacheKey, result, RESULT_CACHE_TTL, TimeUnit.SECONDS);
+        log.debug("Cached result for topicId={} with TTL={} seconds", topicId, RESULT_CACHE_TTL);
+
+        return result;
     }
 
     private Topic findTopicById(Long topicId) {
@@ -83,8 +114,21 @@ public class VoteServiceImpl implements VoteService {
                 .orElseGet(() -> associateRepository.save(newAssociate));
     }
 
-    private void validateDuplicateVote(Long topicId, Long associateId) {
-        if (voteRepository.existsByTopic_TopicIdAndAssociate_AssociateId(topicId, associateId)) {
+    private void validateDuplicateVoteWithCache(Long topicId, Long associateId) {
+        String votesSetKey = VOTES_SET_PREFIX + topicId;
+
+        Boolean hasVotedInCache = redisTemplate.opsForSet().isMember(votesSetKey, associateId);
+        if (Boolean.TRUE.equals(hasVotedInCache)) {
+            log.warn("Associate {} already voted for topicId={} (cache)", associateId, topicId);
+            throw new ResponseStatusException(CONFLICT, "Associate has already voted in this topic");
+        }
+
+        boolean hasVotedInDb = voteRepository.existsByTopic_TopicIdAndAssociate_AssociateId(topicId, associateId);
+        if (hasVotedInDb) {
+            // populate cache to avoid DB next time
+            redisTemplate.opsForSet().add(votesSetKey, associateId);
+            redisTemplate.expire(votesSetKey, VOTES_SET_TTL, TimeUnit.SECONDS);
+            log.warn("Associate {} already voted for topicId={} (DB)", associateId, topicId);
             throw new ResponseStatusException(CONFLICT, "Associate has already voted in this topic");
         }
     }
@@ -101,9 +145,23 @@ public class VoteServiceImpl implements VoteService {
     private Vote saveVote(Vote vote) {
         try {
             return voteRepository.save(vote);
-        } catch (DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException ex) {
+            log.warn("DataIntegrityViolationException on saving vote: {}", ex.getMessage());
             throw new ResponseStatusException(CONFLICT, "Associate has already voted in this topic");
         }
+    }
+
+    private void addAssociateIdToVotesSet(Long topicId, Long associateId) {
+        String votesSetKey = VOTES_SET_PREFIX + topicId;
+        redisTemplate.opsForSet().add(votesSetKey, associateId);
+        redisTemplate.expire(votesSetKey, VOTES_SET_TTL, TimeUnit.SECONDS);
+        log.debug("Added associateId={} to Redis votes set for topicId={}", associateId, topicId);
+    }
+
+    private void invalidateResultCache(Long topicId) {
+        String cacheKey = RESULT_CACHE_PREFIX + topicId;
+        redisTemplate.delete(cacheKey);
+        log.debug("Invalidated cached result for topicId={}", topicId);
     }
 
     private VoteDTO buildVoteDTO(Vote vote) {

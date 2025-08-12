@@ -20,8 +20,13 @@ spring:
 
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
+      timeout: 6000ms
+    cache:
+      type: redis
+
+
       # password: yourpassword  # se tiver senha, descomente
   jackson:
     serialization:
@@ -51,22 +56,6 @@ app:
   redis:
     enabled: true
 
-#springdoc:
-#  api-docs:
-#    path: /v3/api-docs
-#  swagger-ui:
-#    path: /swagger-ui.html
-#  group-configs:
-#    - group: v1
-#      paths-to-match:
-#        - /api/v1/**
-#  default-produces-media-type: application/json
-#  default-consumes-media-type: application/json
-#
-#  info:
-#    topicName: Voting API
-#    version: v1
-#    description: topics, sessions and votes
 
 springdoc:
   api-docs:

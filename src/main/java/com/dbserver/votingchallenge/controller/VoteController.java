@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,13 +22,10 @@ import org.springframework.web.bind.annotation.*;
 )
 @RestController
 @RequestMapping("/api/v1/topics")
+@RequiredArgsConstructor
 public class VoteController {
 
     private final VoteService voteService;
-
-    public VoteController(VoteService voteService) {
-        this.voteService = voteService;
-    }
 
     @Operation(
             summary = "Register a vote for an topic",

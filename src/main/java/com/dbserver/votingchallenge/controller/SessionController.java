@@ -5,10 +5,12 @@ import com.dbserver.votingchallenge.dto.SessionDTO;
 import com.dbserver.votingchallenge.service.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,20 +24,17 @@ import java.time.Duration;
 )
 @RestController
 @RequestMapping("/api/v1/topics")
+@RequiredArgsConstructor
 public class SessionController {
 
     private final SessionService sessionService;
 
-    public SessionController(SessionService sessionService) {
-        this.sessionService = sessionService;
-    }
-
     @Operation(
             summary = "Open a new voting session",
             description = """
-            Creates a new voting session for the specified topic.
-            A custom session duration can be provided; if not specified, the default system duration will be used.
-            """,
+        Creates a new voting session for the specified topic.
+        A custom session duration can be provided; if not specified, the default system duration will be used.
+        """,
             parameters = {
                     @Parameter(
                             name = "topicId",
@@ -61,12 +60,9 @@ public class SessionController {
             @PathVariable Long topicId,
             @RequestBody OpenSessionRequest request
     ) {
-        Duration sessionDuration = request.toDuration();
-        if (sessionDuration == null) {
-            sessionDuration = Duration.ofMinutes(1);
-        }
-
-        SessionDTO created = sessionService.openSession(topicId, sessionDuration);
+        SessionDTO created = sessionService.openSession(topicId, request.toDuration());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
+
+
 }
