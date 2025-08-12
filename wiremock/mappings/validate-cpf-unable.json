@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPattern": "/cpf/validate/11144477788"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "status": "UNABLE_TO_VOTE"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"]
+  }
+}

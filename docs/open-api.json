@@ -1,0 +1,320 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Votting Challenge API v1",
+    "description": "Topics, sessions and votes",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Votes",
+      "description": "Endpoints for registering votes and retrieving voting results"
+    },
+    {
+      "name": "Voting Sessions",
+      "description": "Endpoints for managing voting sessions"
+    },
+    {
+      "name": "Topics",
+      "description": "Endpoints for managing voting topics"
+    }
+  ],
+  "paths": {
+    "/api/v1/topics": {
+      "post": {
+        "tags": ["Topics"],
+        "summary": "Create a new topics",
+        "description": "Receives topics data and returns the created topics.",
+        "operationId": "createTopics",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTopicRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Topics successfully created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TopicDTO" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/TopicDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/topics/{topicId}/votes": {
+      "post": {
+        "tags": ["Votes"],
+        "summary": "Register a vote for an topic",
+        "description": "Records a vote from a member for the specified topic.\nEach member can only vote once per topic.\n",
+        "operationId": "registerVote",
+        "parameters": [
+          {
+            "name": "topicId",
+            "in": "path",
+            "description": "Long of the topic where the vote will be registered",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/VoteRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Vote successfully registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VoteDTO" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data or duplicate vote",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/VoteDTO" }
+              }
+            }
+          },
+          "404": {
+            "description": "Topic not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/VoteDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/topics/{topicId}/sessions": {
+      "post": {
+        "tags": ["Voting Sessions"],
+        "summary": "Open a new voting session",
+        "description": "Creates a new voting session for the specified topic.\nA custom session duration can be provided; if not specified, the default system duration will be used.\n",
+        "operationId": "openSession",
+        "parameters": [
+          {
+            "name": "topicId",
+            "in": "path",
+            "description": "Long of the topic for which the session will be opened",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" },
+            "example": 1
+          },
+          {
+            "name": "duration",
+            "in": "query",
+            "description": "Duration in seconds for the voting session (optional)",
+            "example": 90
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OpenSessionRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Voting session successfully opened",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionDTO" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/SessionDTO" }
+              }
+            }
+          },
+          "404": {
+            "description": "Topic not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/SessionDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/topics/{topicId}": {
+      "get": {
+        "tags": ["Topics"],
+        "summary": "Get topics by ID",
+        "description": "Retrieves topics details by its unique identifier.",
+        "operationId": "getTopic",
+        "parameters": [
+          {
+            "name": "topicId",
+            "in": "path",
+            "description": "Long of the topics to be retrieved",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Topic found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TopicDTO" }
+              }
+            }
+          },
+          "404": {
+            "description": "Topic not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/TopicDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/topics/{topicId}/result": {
+      "get": {
+        "tags": ["Votes"],
+        "summary": "Get voting results for an topic",
+        "description": "Retrieves the final vote counts (yes/no) for the specified topic.",
+        "operationId": "getResult",
+        "parameters": [
+          {
+            "name": "topicId",
+            "in": "path",
+            "description": "Long of the topic",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Voting results retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ResultDTO" }
+              }
+            }
+          },
+          "404": {
+            "description": "Topic not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ResultDTO" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TopicDTO": {
+        "type": "object",
+        "properties": {
+          "topicId": { "type": "integer", "format": "int64" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["DRAFT", "OPEN", "CLOSED"]
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CreateTopicRequest": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      },
+      "VoteDTO": {
+        "type": "object",
+        "properties": {
+          "voteId": { "type": "integer", "format": "int64" },
+          "topicId": { "type": "integer", "format": "int64" },
+          "associateId": { "type": "string" },
+          "choice": {
+            "type": "string",
+            "enum": ["Sim", "Não"]
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "VoteRequest": {
+        "type": "object",
+        "properties": {
+          "associateExternalId": { "type": "string" },
+          "choice": {
+            "type": "string",
+            "enum": ["Sim", "Não"]
+          }
+        }
+      },
+      "SessionDTO": {
+        "type": "object",
+        "properties": {
+          "sessionId": { "type": "integer", "format": "int64" },
+          "topicId": { "type": "integer", "format": "int64" },
+          "opensAt": { "type": "string", "format": "date-time" },
+          "closesAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "OpenSessionRequest": {
+        "type": "object",
+        "properties": {
+          "duration": { "type": "integer", "format": "int64" }
+        }
+      },
+      "ResultDTO": {
+        "type": "object",
+        "properties": {
+          "topicId": { "type": "integer", "format": "int64" },
+          "yes": { "type": "integer", "format": "int64" },
+          "no": { "type": "integer", "format": "int64" },
+          "totalVotes": { "type": "integer", "format": "int64" },
+          "winner": { "type": "string" },
+          "topicName": { "type": "string" }
+        }
+      }
+    }
+  }
+}
