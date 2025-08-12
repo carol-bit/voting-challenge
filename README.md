@@ -13,7 +13,7 @@ The project uses **Spring Boot 3**, **PostgreSQL** database, **Redis** cache, **
 
 ## 🛠️ Technologies Used
 - Java 17
-- Spring Boot 3
+- Spring Boot 3.5.4
 - Spring Data JPA
 - PostgreSQL (Main database)
 - Redis (Cache)
@@ -41,6 +41,13 @@ This will start:
 - Redis (port 6379)
 - Wiremock (port 8089)
 - Application (port 8080)
+
+### When running, the application will be available in:
+
+http://localhost:8080/swagger-ui.html
+
+- **Open API documentation also available at: Collection available at:**
+-  doc/open-api.json
 
 ---
 
@@ -258,17 +265,9 @@ http://localhost:8080/swagger-ui.html
 
 ---
 
-## 🗄️ Cache Structure (Redis)
-- topic::{id} → Topic information (TTL: 10 min)
-- session:{topicId} → Active session (TTL: session duration)
-
----
 
 ## 🛠️ Tests
 Run:
 mvn test
 
----
 
-## 📌 Author
-Developed as a voting technical challenge.
